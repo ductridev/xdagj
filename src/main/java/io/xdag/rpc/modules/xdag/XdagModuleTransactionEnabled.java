@@ -64,6 +64,12 @@ public class XdagModuleTransactionEnabled extends XdagModuleTransactionBase {
     }
 
     @Override
+    public String storeTransaction(CallArguments args) {
+        String result = super.storeTransaction(args);
+        return result;
+    }
+
+    @Override
     public String sendRawTransaction(String rawData) {
         String result = super.sendRawTransaction(rawData);
         return result;
@@ -79,18 +85,18 @@ public class XdagModuleTransactionEnabled extends XdagModuleTransactionBase {
 
         ProcessResult result = ProcessResult.builder().code(SUCCESS.code()).build();
 
-        Bytes32 hash = checkParam(from, to, value, remark,result);
+        Bytes32 hash = checkParam(from, to, value, remark, result);
         if (result.getCode() != SUCCESS.code()) {
             return result.getErrMsg();
         }
-        checkPassword(passphrase,result);
+        checkPassword(passphrase, result);
         if (result.getCode() != SUCCESS.code()) {
             return result.getErrMsg();
         }
 
         // do xfer
         double amount = BasicUtils.getDouble(value);
-        doXfer(amount,hash,remark,result);
+        doXfer(amount, hash, remark, result);
 
         if (result.getCode() != SUCCESS.code()) {
             return result.getErrMsg();
@@ -99,18 +105,17 @@ public class XdagModuleTransactionEnabled extends XdagModuleTransactionBase {
         }
     }
 
-
-    public void doXfer(double sendValue, Bytes32 toAddress,String remark, ProcessResult processResult) {
+    public void doXfer(double sendValue, Bytes32 toAddress, String remark, ProcessResult processResult) {
         long amount = 0;
         try {
             amount = xdag2amount(sendValue);
-        } catch (XdagOverFlowException e){
+        } catch (XdagOverFlowException e) {
             processResult.setCode(ERR_PARAM_INVALID.code());
             processResult.setErrMsg(ERR_PARAM_INVALID.msg());
             return;
         }
         MutableBytes32 to = MutableBytes32.create();
-//        System.arraycopy(address, 8, to, 8, 24);
+        // System.arraycopy(address, 8, to, 8, 24);
         to.set(8, toAddress.slice(8, 24));
 
         // 待转账余额
@@ -159,7 +164,7 @@ public class XdagModuleTransactionEnabled extends XdagModuleTransactionBase {
         processResult.setResInfo(resInfo);
     }
 
-    private Bytes32 checkParam(String from, String to, String value, String remark,ProcessResult processResult) {
+    private Bytes32 checkParam(String from, String to, String value, String remark, ProcessResult processResult) {
         Bytes32 hash = null;
         try {
             double amount = BasicUtils.getDouble(value);
@@ -192,7 +197,7 @@ public class XdagModuleTransactionEnabled extends XdagModuleTransactionBase {
         return hash;
     }
 
-    private void checkPassword(String passphrase,ProcessResult result) {
+    private void checkPassword(String passphrase, ProcessResult result) {
         Wallet wallet = new Wallet(kernel.getConfig());
         try {
             boolean res = wallet.unlock(passphrase);

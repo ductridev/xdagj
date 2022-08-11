@@ -72,28 +72,28 @@ public interface Web3 extends Web3XdagModule {
 
         public String from;
         public String to;
-        //        public String gas;
-//        public String gasPrice;
+        // public String gas;
+        public String gasPrice;
         public String value;
-        //        public String data; // compiledCode
+        // public String data; // compiledCode
         public String remark;
-//        public String netType;
-        //        public String nonce;
-//        public String chainId; //NOSONAR
+        // public String netType;
+        public String nonce;
+        public String chainId; // NOSONAR
 
         @Override
         public String toString() {
             return "CallArguments{" +
                     "from='" + from + '\'' +
                     ", to='" + to + '\'' +
-//                    ", gasLimit='" + gas + '\'' +
-//                    ", gasPrice='" + gasPrice + '\'' +
+                    // ", gasLimit='" + gas + '\'' +
+                    // ", gasPrice='" + gasPrice + '\'' +
                     ", value='" + value + '\'' +
                     ", remark='" + remark + '\'' +
-//                    ", netType='" + netType + '\'' +
-//                    ", data='" + data + '\'' +
-//                    ", nonce='" + nonce + '\'' +
-//                    ", chainId='" + chainId + '\'' +
+                    // ", netType='" + netType + '\'' +
+                    // ", data='" + data + '\'' +
+                    // ", nonce='" + nonce + '\'' +
+                    // ", chainId='" + chainId + '\'' +
                     '}';
         }
     }
@@ -123,9 +123,9 @@ public interface Web3 extends Web3XdagModule {
         }
     }
 
-//    void sco_banAddress(String address);
-//    void sco_unbanAddress(String address);
-//    PeerScoringInformation[] sco_peerList();
-//    String[] sco_bannedAddresses();
-//    PeerScoringReputationSummary sco_reputationSummary();
+    // void sco_banAddress(String address);
+    // void sco_unbanAddress(String address);
+    // PeerScoringInformation[] sco_peerList();
+    // String[] sco_bannedAddresses();
+    // PeerScoringReputationSummary sco_reputationSummary();
 }

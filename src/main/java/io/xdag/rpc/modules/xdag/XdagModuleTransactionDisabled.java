@@ -41,6 +41,12 @@ public class XdagModuleTransactionDisabled extends XdagModuleTransactionBase {
     }
 
     @Override
+    public String storeTransaction(Web3.CallArguments args) {
+        String result = super.storeTransaction(args);
+        return result;
+    }
+
+    @Override
     public String sendTransaction(Web3.CallArguments args) {
         logger.debug("xdag_sendTransaction({}): {}", args, null);
         throw invalidParamError("Local wallet is disabled in this node");

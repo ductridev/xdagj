@@ -30,7 +30,6 @@ import io.xdag.rpc.dto.ProcessResult;
 import io.xdag.rpc.dto.StatusDTO;
 import io.xdag.rpc.modules.xdag.XdagModule;
 
-
 public interface Web3XdagModule {
 
     default String[] xdag_accounts() {
@@ -83,6 +82,10 @@ public interface Web3XdagModule {
         return getXdagModule().sendRawTransaction(rawData);
     }
 
+    default String xdag_storeTransaction(Web3.CallArguments args) {
+        return getXdagModule().storeTransaction(args);
+    }
+
     default String xdag_sendTransaction(Web3.CallArguments args) {
         return getXdagModule().sendTransaction(args);
     }
@@ -98,6 +101,8 @@ public interface Web3XdagModule {
     StatusDTO xdag_getStatus() throws Exception;
 
     Object xdag_netType() throws Exception;
+
     Object xdag_poolConfig() throws Exception;
+
     Object xdag_netConnectionList() throws Exception;
 }

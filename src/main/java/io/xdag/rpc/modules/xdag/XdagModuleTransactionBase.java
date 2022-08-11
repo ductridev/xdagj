@@ -33,7 +33,11 @@ import io.xdag.core.XdagBlock;
 import io.xdag.rpc.Web3;
 import io.xdag.rpc.Web3.CallArguments;
 import io.xdag.rpc.dto.ProcessResult;
+import io.xdag.rpc.utils.TypeConverter;
 import io.xdag.utils.BasicUtils;
+
+import java.math.BigInteger;
+
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,12 +56,47 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
     @Override
     public synchronized String sendTransaction(Web3.CallArguments args) {
         // 1. process args
-//        byte[] from = Hex.decode(args.from);
-//        byte[] to = Hex.decode(args.to);
-//        BigInteger value = args.value != null ? TypeConverter.stringNumberAsBigInt(args.value) : BigInteger.ZERO;
+        // byte[] from = Hex.decode(args.from);
+        // byte[] to = Hex.decode(args.to);
+        // BigInteger value = args.value != null ?
+        // TypeConverter.stringNumberAsBigInt(args.value) : BigInteger.ZERO;
         // 2. create a transaction
         // 3. try to add blockchain
         return null;
+    }
+
+    @Override
+    public String storeTransaction(Web3.CallArguments args) {
+
+        System.out.println(args);
+        byte[] from = Hex.decode(args.from);
+        byte[] to = Hex.decode(args.to);
+        byte[] value = (args.value != null ? TypeConverter.stringNumberAsBigInt(args.value) : BigInteger.ZERO)
+                .toByteArray();
+        byte[] nonce = Hex.decode(args.nonce);
+        ;
+        byte[] chainId = Hex.decode(args.chainId);
+        ;
+        byte[] gasPrice = Hex.decode(args.gasPrice);
+        ;
+        byte[] remark = Hex.decode(args.remark);
+        ;
+
+        byte[] combined = new byte[from.length + to.length + value.length + nonce.length + chainId.length
+                + gasPrice.length + remark.length];
+
+        System.arraycopy(from, 0, combined, 0, from.length);
+        System.arraycopy(to, 0, combined, from.length, to.length);
+        System.arraycopy(value, 0, combined, to.length, value.length);
+        System.arraycopy(nonce, 0, combined, value.length, nonce.length);
+        System.arraycopy(chainId, 0, combined, nonce.length, chainId.length);
+        System.arraycopy(gasPrice, 0, combined, chainId.length, gasPrice.length);
+        System.arraycopy(remark, 0, combined, gasPrice.length, remark.length);
+
+        Block block = new Block(new XdagBlock(combined));
+        kernel.getSyncMgr().syncPushBlock(
+                new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL()), block.getHashLow());
+        return BasicUtils.hash2Address(block.getHash());
     }
 
     @Override
@@ -68,7 +107,7 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         System.out.println(rawData);
         Block block = new Block(new XdagBlock(Hex.decode(rawData)));
         kernel.getSyncMgr().syncPushBlock(
-                new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL()),block.getHashLow());
+                new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL()), block.getHashLow());
         return BasicUtils.hash2Address(block.getHash());
     }
 

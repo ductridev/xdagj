@@ -45,12 +45,13 @@ public class XdagModule implements XdagModuleTransaction, XdagModuleWallet, Xdag
     private final XdagModuleChain xdagModuleChain;
     private final byte chainId;
 
-//    public XdagModule(byte chainId, XdagModuleWallet xdagModuleWallet, XdagModuleTransaction xdagModuleTransaction) {
-//        this.chainId = chainId;
-//        this.xdagModuleWallet = xdagModuleWallet;
-//        this.xdagModuleTransaction = xdagModuleTransaction;
-//        this.xdagModuleChain = null;
-//    }
+    // public XdagModule(byte chainId, XdagModuleWallet xdagModuleWallet,
+    // XdagModuleTransaction xdagModuleTransaction) {
+    // this.chainId = chainId;
+    // this.xdagModuleWallet = xdagModuleWallet;
+    // this.xdagModuleTransaction = xdagModuleTransaction;
+    // this.xdagModuleChain = null;
+    // }
 
     public XdagModule(byte chainId, XdagModuleWallet xdagModuleWallet, XdagModuleTransaction xdagModuleTransaction,
             XdagModuleChain xdagModuleChain) {
@@ -60,14 +61,18 @@ public class XdagModule implements XdagModuleTransaction, XdagModuleWallet, Xdag
         this.xdagModuleChain = xdagModuleChain;
     }
 
-
     public String chainId() {
-        return TypeConverter.toJsonHex(new byte[]{chainId});
+        return TypeConverter.toJsonHex(new byte[] { chainId });
     }
 
     @Override
     public String sendTransaction(Web3.CallArguments args) {
         return xdagModuleTransaction.sendTransaction(args);
+    }
+
+    @Override
+    public String storeTransaction(Web3.CallArguments args) {
+        return xdagModuleTransaction.storeTransaction(args);
     }
 
     @Override
