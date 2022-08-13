@@ -94,8 +94,15 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         System.arraycopy(remark, 0, combined, gasPrice.length, remark.length);
 
         Block block = new Block(new XdagBlock(combined));
-        kernel.getSyncMgr().syncPushBlock(
-                new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL()), block.getHashLow());
+
+        BlockWrapper blockWrapper = new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL());
+
+        ImportResult result = kernel.getSyncMgr().validateAndAddNewBlock(blockWrapper);
+
+        if (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST) {
+            kernel.getChannelMgr().sendNewBlock(blockWrapper);
+            return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
+        }
         return BasicUtils.hash2Address(block.getHash());
     }
 
