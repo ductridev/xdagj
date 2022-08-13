@@ -103,7 +103,7 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
             kernel.getChannelMgr().sendNewBlock(blockWrapper);
             return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
         }
-        return BasicUtils.hash2Address(block.getHash());
+        return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
     }
 
     @Override
