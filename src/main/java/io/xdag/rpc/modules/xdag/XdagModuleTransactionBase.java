@@ -66,20 +66,20 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
     }
 
     @Override
-    public String storeTransaction(Web3.CallArguments args) {
+    public String storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
+            String _gasPrice, String _remark) {
 
-        System.out.println(args);
-        byte[] from = Hex.decode(args.from);
-        byte[] to = Hex.decode(args.to);
-        byte[] value = (args.value != null ? TypeConverter.stringNumberAsBigInt(args.value) : BigInteger.ZERO)
+        byte[] from = Hex.decode(_from);
+        byte[] to = Hex.decode(_to);
+        byte[] value = (_value != null ? TypeConverter.stringNumberAsBigInt(_value) : BigInteger.ZERO)
                 .toByteArray();
-        byte[] nonce = Hex.decode(args.nonce);
+        byte[] nonce = Hex.decode(_nonce);
         ;
-        byte[] chainId = Hex.decode(args.chainId);
+        byte[] chainId = Hex.decode(_chainId);
         ;
-        byte[] gasPrice = Hex.decode(args.gasPrice);
+        byte[] gasPrice = Hex.decode(_gasPrice);
         ;
-        byte[] remark = Hex.decode(args.remark);
+        byte[] remark = Hex.decode(_remark);
         ;
 
         byte[] combined = new byte[from.length + to.length + value.length + nonce.length + chainId.length
