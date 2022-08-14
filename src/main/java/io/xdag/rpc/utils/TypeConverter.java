@@ -82,9 +82,9 @@ public class TypeConverter {
         return result;
     }
 
-//    public static String toJsonHex(Coin x) {
-//        return x != null ? x.asBigInteger().toString() : "" ;
-//    }
+    // public static String toJsonHex(Coin x) {
+    // return x != null ? x.asBigInteger().toString() : "" ;
+    // }
 
     public static String toJsonHex(String x) {
         return "0x" + x;
@@ -109,7 +109,8 @@ public class TypeConverter {
     }
 
     /**
-     * Converts a byte array to a string according to ethereum json-rpc specifications, null and empty
+     * Converts a byte array to a string according to ethereum json-rpc
+     * specifications, null and empty
      * convert to 0x.
      *
      * @param x An unformatted byte array
@@ -120,14 +121,16 @@ public class TypeConverter {
     }
 
     /**
-     * Converts a byte array representing a quantity according to ethereum json-rpc specifications.
+     * Converts a byte array representing a quantity according to ethereum json-rpc
+     * specifications.
      *
      * <p>
      * 0x000AEF -> 0x2AEF
      * <p>
      * 0x00 -> 0x0
      *
-     * @param x A hex string with or without leading zeroes ("0x00AEF"). If null, it is considered as zero.
+     * @param x A hex string with or without leading zeroes ("0x00AEF"). If null, it
+     *          is considered as zero.
      * @return A hex string without leading zeroes ("0xAEF")
      */
     public static String toQuantityJsonHex(byte[] x) {
@@ -154,4 +157,3 @@ public class TypeConverter {
         return Long.parseLong(x, 16);
     }
 }
-

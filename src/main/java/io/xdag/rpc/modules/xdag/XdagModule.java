@@ -71,9 +71,8 @@ public class XdagModule implements XdagModuleTransaction, XdagModuleWallet, Xdag
     }
 
     @Override
-    public String storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
-            String _gasPrice, String _remark) {
-        return xdagModuleTransaction.storeTransaction(_from, _to, _value, _nonce, _chainId, _gasPrice, _remark);
+    public String storeTransaction(Web3.CallArguments args) {
+        return xdagModuleTransaction.storeTransaction(args);
     }
 
     @Override

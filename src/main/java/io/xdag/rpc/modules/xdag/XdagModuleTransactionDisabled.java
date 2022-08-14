@@ -41,9 +41,8 @@ public class XdagModuleTransactionDisabled extends XdagModuleTransactionBase {
     }
 
     @Override
-    public String storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
-            String _gasPrice, String _remark) {
-        String result = super.storeTransaction(_from, _to, _value, _nonce, _chainId, _gasPrice, _remark);
+    public String storeTransaction(Web3.CallArguments args) {
+        String result = super.storeTransaction(args);
         return result;
     }
 

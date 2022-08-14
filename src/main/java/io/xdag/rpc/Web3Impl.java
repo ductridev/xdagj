@@ -110,9 +110,8 @@ public class Web3Impl implements Web3 {
     }
 
     @Override
-    public String xdag_storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
-            String _gasPrice, String _remark) {
-        return web3XdagModule.xdag_storeTransaction(_from, _to, _value, _nonce, _chainId, _gasPrice, _remark);
+    public String xdag_storeTransaction(Web3.CallArguments args) {
+        return web3XdagModule.xdag_storeTransaction(args);
     }
 
     @Override
