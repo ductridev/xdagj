@@ -64,9 +64,9 @@ public class XdagModuleTransactionEnabled extends XdagModuleTransactionBase {
     }
 
     @Override
-    public String storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
+    public Object storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
             String _gasPrice, String _remark) {
-        String result = super.storeTransaction(_from, _to, _value, _nonce, _chainId,
+        Object result = super.storeTransaction(_from, _to, _value, _nonce, _chainId,
                 _gasPrice, _remark);
         return result;
     }
