@@ -66,42 +66,39 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
     }
 
     @Override
-    public String storeTransaction(Web3.CallArguments args) {
-        throw new Error(args.toString());
-        // byte[] from = args.from.getBytes();
-        // byte[] to = args.to.getBytes();
-        // byte[] value = args.value.getBytes();
-        // byte[] nonce = args.nonce.getBytes();
-        // byte[] chainId = args.chainId.getBytes();
-        // byte[] gasPrice = args.gasPrice.getBytes();
-        // byte[] remark = args.remark.getBytes();
+    public String storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
+            String _gasPrice, String _remark) {
 
-        // byte[] combined = new byte[from.length + to.length + value.length +
-        // nonce.length + chainId.length
-        // + gasPrice.length + remark.length];
+        byte[] from = _from.getBytes();
+        byte[] to = _to.getBytes();
+        byte[] value = _value.getBytes();
+        byte[] nonce = _nonce.getBytes();
+        byte[] chainId = _chainId.getBytes();
+        byte[] gasPrice = _gasPrice.getBytes();
+        byte[] remark = _remark.getBytes();
 
-        // System.arraycopy(from, 0, combined, 0, from.length);
-        // System.arraycopy(to, 0, combined, from.length, to.length);
-        // System.arraycopy(value, 0, combined, to.length, value.length);
-        // System.arraycopy(nonce, 0, combined, value.length, nonce.length);
-        // System.arraycopy(chainId, 0, combined, nonce.length, chainId.length);
-        // System.arraycopy(gasPrice, 0, combined, chainId.length, gasPrice.length);
-        // System.arraycopy(remark, 0, combined, gasPrice.length, remark.length);
+        byte[] combined = new byte[from.length + to.length + value.length + nonce.length + chainId.length
+                + gasPrice.length + remark.length];
 
-        // Block block = new Block(new XdagBlock(combined));
+        System.arraycopy(from, 0, combined, 0, from.length);
+        System.arraycopy(to, 0, combined, from.length, to.length);
+        System.arraycopy(value, 0, combined, to.length, value.length);
+        System.arraycopy(nonce, 0, combined, value.length, nonce.length);
+        System.arraycopy(chainId, 0, combined, nonce.length, chainId.length);
+        System.arraycopy(gasPrice, 0, combined, chainId.length, gasPrice.length);
+        System.arraycopy(remark, 0, combined, gasPrice.length, remark.length);
 
-        // BlockWrapper blockWrapper = new BlockWrapper(block,
-        // kernel.getConfig().getNodeSpec().getTTL());
+        Block block = new Block(new XdagBlock(combined));
 
-        // ImportResult result =
-        // kernel.getSyncMgr().validateAndAddNewBlock(blockWrapper);
+        BlockWrapper blockWrapper = new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL());
 
-        // if (result == ImportResult.IMPORTED_BEST || result ==
-        // ImportResult.IMPORTED_NOT_BEST) {
-        // kernel.getChannelMgr().sendNewBlock(blockWrapper);
-        // return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
-        // }
-        // return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
+        ImportResult result = kernel.getSyncMgr().validateAndAddNewBlock(blockWrapper);
+
+        if (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST) {
+            kernel.getChannelMgr().sendNewBlock(blockWrapper);
+            return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
+        }
+        return BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow());
     }
 
     @Override

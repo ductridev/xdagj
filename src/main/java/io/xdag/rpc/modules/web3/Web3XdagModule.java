@@ -82,8 +82,10 @@ public interface Web3XdagModule {
         return getXdagModule().sendRawTransaction(rawData);
     }
 
-    default String xdag_storeTransaction(Web3.CallArguments args) {
-        return getXdagModule().storeTransaction(args);
+    default String xdag_storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
+            String _gasPrice, String _remark) {
+        return getXdagModule().storeTransaction(_from, _to, _value, _nonce, _chainId,
+                _gasPrice, _remark);
     }
 
     default String xdag_sendTransaction(Web3.CallArguments args) {
