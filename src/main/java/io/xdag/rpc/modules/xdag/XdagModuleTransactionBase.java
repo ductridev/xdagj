@@ -142,8 +142,6 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
             int index = pair.getKey();
             Block block = pair.getValue();
 
-            System.out.println(new Address(block.getHashLow(), XDAG_FIELD_IN, remain.get()));
-
             ourBlocks.put(new Address(block.getHashLow(), XDAG_FIELD_IN, remain.get()),
                     kernel.getWallet().getAccounts().get(index));
             return true;

@@ -176,6 +176,7 @@ public class SyncManager {
     public synchronized ImportResult validateAndAddNewBlock(BlockWrapper blockWrapper) {
         blockWrapper.getBlock().parse();
         ImportResult result = importBlock(blockWrapper);
+        System.out.println(result);
         log.debug("validateAndAddNewBlock:{}, {}", blockWrapper.getBlock().getHashLow().toHexString(), result);
         switch (result) {
             case EXIST:
@@ -184,7 +185,6 @@ public class SyncManager {
                 syncPopBlock(blockWrapper);
                 break;
             case NO_PARENT: {
-                System.out.println(result.getHashlow());
                 if (syncPushBlock(blockWrapper, result.getHashlow())) {
 
                     log.debug("push block:{}, NO_PARENT {}", blockWrapper.getBlock().getHashLow().toHexString(),
