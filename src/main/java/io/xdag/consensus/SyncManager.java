@@ -76,7 +76,6 @@ public class SyncManager {
     private ScheduledFuture<?> connectlibp2pFuture;
     private Set<DiscoveryPeer> hadConnectnode = new HashSet<>();
 
-
     // 监听是否需要自己启动
     private StateListener stateListener;
     /**
@@ -91,6 +90,7 @@ public class SyncManager {
      * Queue for poll oldest block
      */
     private ConcurrentLinkedQueue<Bytes32> queue = new ConcurrentLinkedQueue<>();
+
     public SyncManager(Kernel kernel) {
         this.kernel = kernel;
         this.blockchain = kernel.getBlockchain();
@@ -114,12 +114,12 @@ public class SyncManager {
                     .getPoolSpec().getWaitEpoch())) {
                 res = true;
             }
-        } else if (config instanceof TestnetConfig){
+        } else if (config instanceof TestnetConfig) {
             if (kernel.getXdagState() != XdagState.CTST && (XdagTime.getCurrentEpoch() > kernel.getStartEpoch() + config
                     .getPoolSpec().getWaitEpoch())) {
                 res = true;
             }
-        } else if (config instanceof DevnetConfig){
+        } else if (config instanceof DevnetConfig) {
             if (kernel.getXdagState() != XdagState.CDST && (XdagTime.getCurrentEpoch() > kernel.getStartEpoch() + config
                     .getPoolSpec().getWaitEpoch())) {
                 res = true;
@@ -133,7 +133,7 @@ public class SyncManager {
     /**
      * Processing the queue adding blocks to the chain.
      */
-    //todo:修改共识
+    // todo:修改共识
     public ImportResult importBlock(BlockWrapper blockWrapper) {
         log.debug("importBlock:{}", blockWrapper.getBlock().getHash().toHexString());
         ImportResult importResult = blockchain
@@ -157,7 +157,7 @@ public class SyncManager {
                     kernel.setXdagState(XdagState.CDST);
                 }
 
-                if((blockchain.getXdagStats().getMaxdifficulty().compareTo(BigInteger.ZERO) > 0) &&
+                if ((blockchain.getXdagStats().getMaxdifficulty().compareTo(BigInteger.ZERO) > 0) &&
                         (currentDiff.compareTo(blockchain.getXdagStats().getMaxdifficulty()) >= 0)) {
                     makeSyncDone();
                 }
@@ -185,6 +185,7 @@ public class SyncManager {
                 break;
             case NO_PARENT: {
                 if (syncPushBlock(blockWrapper, result.getHashlow())) {
+
                     log.debug("push block:{}, NO_PARENT {}", blockWrapper.getBlock().getHashLow().toHexString(),
                             result.getHashlow().toHexString());
                     List<Channel> channels = channelMgr.getActiveChannels();
@@ -199,7 +200,8 @@ public class SyncManager {
                 break;
             }
             case INVALID_BLOCK: {
-//                log.error("invalid block:{}", Hex.toHexString(blockWrapper.getBlock().getHashLow()));
+                // log.error("invalid block:{}",
+                // Hex.toHexString(blockWrapper.getBlock().getHashLow()));
                 break;
             }
             default:
@@ -212,13 +214,13 @@ public class SyncManager {
      * 同步缺失区块
      *
      * @param blockWrapper 新区块
-     * @param hashLow 缺失的parent哈希
+     * @param hashLow      缺失的parent哈希
      */
     public boolean syncPushBlock(BlockWrapper blockWrapper, Bytes32 hashLow) {
-        if(syncMap.size() >= 50000){
+        if (syncMap.size() >= 50000) {
             for (int i = 0; i < 200; i++) {
                 Bytes32 last = queue.poll();
-                if(syncMap.containsKey(last)){
+                if (syncMap.containsKey(last)) {
                     syncMap.remove(last);
                     blockchain.getXdagStats().nwaitsync--;
                 }
@@ -226,7 +228,7 @@ public class SyncManager {
         }
         AtomicBoolean r = new AtomicBoolean(true);
         long now = System.currentTimeMillis();
-//        ByteArrayWrapper refKey = new ByteArrayWrapper(hashLow);
+        // ByteArrayWrapper refKey = new ByteArrayWrapper(hashLow);
         Queue<BlockWrapper> newQueue = Queues.newConcurrentLinkedQueue();
         blockWrapper.setTime(now);
         newQueue.add(blockWrapper);
@@ -235,13 +237,15 @@ public class SyncManager {
                 (oldQ, newQ) -> {
                     blockchain.getXdagStats().nwaitsync--;
                     for (BlockWrapper b : oldQ) {
+                        System.out.println(b.getBlock().getHashLow());
+                        System.out.println(blockWrapper.getBlock().getHashLow());
                         if (b.getBlock().getHashLow().equals(blockWrapper.getBlock().getHashLow())) {
                             // after 64 sec must resend block request
                             if (now - b.getTime() > 64 * 1000) {
                                 b.setTime(now);
                                 r.set(true);
                             } else {
-                                //TODO should be consider timeout not received request block
+                                // TODO should be consider timeout not received request block
                                 r.set(false);
                             }
                             return oldQ;
@@ -251,7 +255,7 @@ public class SyncManager {
                     r.set(true);
                     return oldQ;
                 });
-        if(!queue.contains(hashLow)){
+        if (!queue.contains(hashLow)) {
             queue.offer(hashLow);
         }
         return r.get();
@@ -264,7 +268,7 @@ public class SyncManager {
      */
     public void syncPopBlock(BlockWrapper blockWrapper) {
         Block block = blockWrapper.getBlock();
-//        ByteArrayWrapper key = new ByteArrayWrapper(block.getHashLow().toArray());
+        // ByteArrayWrapper key = new ByteArrayWrapper(block.getHashLow().toArray());
         Queue<BlockWrapper> queue = syncMap.getOrDefault(block.getHashLow(), null);
         if (queue != null) {
             syncMap.remove(block.getHashLow());

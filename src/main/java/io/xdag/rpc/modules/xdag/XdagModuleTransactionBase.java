@@ -142,6 +142,8 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
             int index = pair.getKey();
             Block block = pair.getValue();
 
+            System.out.println(new Address(block.getHashLow(), XDAG_FIELD_IN, remain.get()));
+
             ourBlocks.put(new Address(block.getHashLow(), XDAG_FIELD_IN, remain.get()),
                     kernel.getWallet().getAccounts().get(index));
             return true;
@@ -174,10 +176,11 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         List<BlockWrapper> txs = kernel.getWallet().createTransactionBlock(ourBlocks, to, remark);
         for (BlockWrapper blockWrapper : txs) {
             ImportResult result = kernel.getSyncMgr().validateAndAddNewBlock(blockWrapper);
-            if (result == ImportResult.IMPORTED_BEST || result == ImportResult.IMPORTED_NOT_BEST) {
-                kernel.getChannelMgr().sendNewBlock(blockWrapper);
-                resInfo.add(BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow()));
-            }
+            // if (result == ImportResult.IMPORTED_BEST || result ==
+            // ImportResult.IMPORTED_NOT_BEST) {
+            kernel.getChannelMgr().sendNewBlock(blockWrapper);
+            resInfo.add(BasicUtils.hash2Address(blockWrapper.getBlock().getHashLow()));
+            // }
         }
 
         processResult.setCode(SUCCESS.code());
