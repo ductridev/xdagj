@@ -136,6 +136,8 @@ public class SyncManager {
     // todo:修改共识
     public ImportResult importBlock(BlockWrapper blockWrapper) {
         log.debug("importBlock:{}", blockWrapper.getBlock().getHash().toHexString());
+
+        System.out.println(new XdagBlock(blockWrapper.getBlock().getXdagBlock().getData().toArray()));
         ImportResult importResult = blockchain
                 .tryToConnect(new Block(new XdagBlock(blockWrapper.getBlock().getXdagBlock().getData().toArray())));
 
@@ -176,7 +178,6 @@ public class SyncManager {
     public synchronized ImportResult validateAndAddNewBlock(BlockWrapper blockWrapper) {
         blockWrapper.getBlock().parse();
         ImportResult result = importBlock(blockWrapper);
-        System.out.println(result);
         log.debug("validateAndAddNewBlock:{}, {}", blockWrapper.getBlock().getHashLow().toHexString(), result);
         switch (result) {
             case EXIST:
