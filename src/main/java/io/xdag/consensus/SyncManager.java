@@ -137,7 +137,7 @@ public class SyncManager {
     public ImportResult importBlock(BlockWrapper blockWrapper) {
         log.debug("importBlock:{}", blockWrapper.getBlock().getHash().toHexString());
 
-        System.out.println(new XdagBlock(blockWrapper.getBlock().getXdagBlock().getData().toArray()));
+        System.out.println(blockWrapper.getBlock().getXdagBlock().getData().toArray());
         ImportResult importResult = blockchain
                 .tryToConnect(new Block(new XdagBlock(blockWrapper.getBlock().getXdagBlock().getData().toArray())));
 
