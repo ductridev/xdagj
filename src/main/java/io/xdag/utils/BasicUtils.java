@@ -36,6 +36,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import org.apache.tuweni.bytes.Bytes;
@@ -46,13 +47,13 @@ import org.apache.tuweni.bytes.MutableBytes32;
 public class BasicUtils {
 
     public static BigInteger getDiffByHash(Bytes32 hash) {
-//        byte[] data = new byte[16];
+        // byte[] data = new byte[16];
         MutableBytes data = MutableBytes.create(16);
         // 实现了右移32位 4个字节
-//        System.arraycopy(hash, 0, data, 4, 12);
+        // System.arraycopy(hash, 0, data, 4, 12);
         data.set(4, hash.slice(0, 12));
         BigInteger res = new BigInteger(data.toUnprefixedHexString(), 16);
-//        BigInteger res = data.toUnsignedBigInteger();
+        // BigInteger res = data.toUnsignedBigInteger();
         // max是2的128次方减1 这样效率高吗
         BigInteger max = new BigInteger("ffffffffffffffffffffffffffffffff", 16);
         return max.divide(res);
@@ -61,8 +62,17 @@ public class BasicUtils {
     public static Bytes32 getHash(String address) {
         Bytes32 hash = null;
         if (address != null) {
-//            hash = Hex.decode(address);
+            // hash = Hex.decode(address);
             hash = Bytes32.fromHexString(address);
+        }
+        return hash;
+    }
+
+    public static Bytes32 getHashStoreTransaction(String address) {
+        Bytes32 hash = null;
+        if (address != null) {
+            // hash = Hex.decode(address);
+            hash = Bytes32.fromHexString(asciiToHex(address));
         }
         return hash;
     }
@@ -78,11 +88,11 @@ public class BasicUtils {
     }
 
     public static Bytes32 address2Hash(String address) {
-//        byte[] ret = Base64.decode(address);
+        // byte[] ret = Base64.decode(address);
         Bytes ret = Bytes.fromBase64String(address);
-//        byte[] res = new byte[32];
+        // byte[] res = new byte[32];
         MutableBytes32 res = MutableBytes32.create();
-//        System.arraycopy(Arrays.reverse(ret),0,res,8,24);
+        // System.arraycopy(Arrays.reverse(ret),0,res,8,24);
         res.set(8, ret.reverse().slice(0, 24));
         return res;
     }
@@ -103,7 +113,7 @@ public class BasicUtils {
         input -= amount; // 小数部分
         input = input * Math.pow(2, 32);
         double tmp = Math.ceil(input);
-        long result =  (long) (res + tmp);
+        long result = (long) (res + tmp);
         if (result < 0) {
             throw new XdagOverFlowException();
         }
@@ -118,9 +128,12 @@ public class BasicUtils {
     }
 
     /**
-     * Xfer:transferred   44796588980   10.430000000 XDAG to the address 0000002f28322e9d817fd94a1357e51a. 10.43
-     * Xfer:transferred   42949672960   10.000000000 XDAG to the address 0000002f28322e9d817fd94a1357e51a. 10
-     * Xfer:transferred 4398046511104 1024.000000000 XDAG to the address 0000002f28322e9d817fd94a1357e51a. 1024
+     * Xfer:transferred 44796588980 10.430000000 XDAG to the address
+     * 0000002f28322e9d817fd94a1357e51a. 10.43
+     * Xfer:transferred 42949672960 10.000000000 XDAG to the address
+     * 0000002f28322e9d817fd94a1357e51a. 10
+     * Xfer:transferred 4398046511104 1024.000000000 XDAG to the address
+     * 0000002f28322e9d817fd94a1357e51a. 1024
      */
     public static double amount2xdag(long xdag) {
         if (xdag < 0) {
@@ -145,7 +158,7 @@ public class BasicUtils {
         byte[] resByte = new byte[8];
         System.arraycopy(bytes, 8, resByte, 0, 8);
 
-        BigInteger res =  Bytes.wrap(resByte).toBigInteger();
+        BigInteger res = Bytes.wrap(resByte).toBigInteger();
         byte[] data = new byte[16];
         Arrays.fill(data, (byte) 0);
         System.arraycopy(bytes, 0, data, 0, 8);
@@ -198,16 +211,26 @@ public class BasicUtils {
         }
         return buffer;
     }
-    public static double xdagHashRate(BigInteger[] diffs){
+
+    public static double xdagHashRate(BigInteger[] diffs) {
         double sum = 0;
-//        for (BigInteger diff : diffs) {
-//            sum += xdag_diff2log(diff);
-//        }
-        int length = Math.min(diffs.length,HASH_RATE_LAST_MAX_TIME);
+        // for (BigInteger diff : diffs) {
+        // sum += xdag_diff2log(diff);
+        // }
+        int length = Math.min(diffs.length, HASH_RATE_LAST_MAX_TIME);
         for (int i = 0; i < length; i++) {
             sum += xdag_diff2log(diffs[i]);
         }
         sum /= HASH_RATE_LAST_MAX_TIME;
         return Math.exp(sum) * Math.pow(2, -48);
+    }
+
+    private static String asciiToHex(String asciiValue) {
+        char[] chars = asciiValue.toCharArray();
+        StringBuffer hex = new StringBuffer();
+        for (int i = 0; i < chars.length; i++) {
+            hex.append(Integer.toHexString((int) chars[i]));
+        }
+        return hex.toString();
     }
 }

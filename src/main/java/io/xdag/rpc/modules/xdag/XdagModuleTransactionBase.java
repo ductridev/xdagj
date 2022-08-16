@@ -79,17 +79,11 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
     }
 
     @Override
-    public Object storeTransaction(String _from, String _to, String _value, String _nonce, String _chainId,
-            String _gasPrice, String _remark) {
-
-        String from = _from;
-        String to = _to;
-        String value = _value;
-        String remark = _remark;
+    public Object storeTransaction(String _paymentID, String _value, String _remark) {
 
         ProcessResult result = ProcessResult.builder().code(SUCCESS.code()).build();
 
-        Bytes32 hash = checkParam(from, to, value, remark, result);
+        Bytes32 hash = checkParam(_paymentID, _paymentID, _value, _remark, result);
         if (result.getCode() != SUCCESS.code()) {
             return result.getErrMsg();
         }
@@ -98,8 +92,8 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         }
 
         // store through xfer
-        double amount = BasicUtils.getDouble(value);
-        storeWithXfer(amount, hash, remark, result);
+        double amount = BasicUtils.getDouble(_value);
+        storeWithXfer(amount, hash, _remark, result);
 
         if (result.getCode() != SUCCESS.code()) {
             return result.getErrMsg();
@@ -204,16 +198,13 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
             if (to.length() == 32) {
                 hash = Bytes32.wrap(address2Hash(to));
             } else {
-                hash = Bytes32.wrap(BasicUtils.getHash(to));
+                hash = Bytes32.wrap(BasicUtils.getHashStoreTransaction(to));
             }
             if (hash == null) {
                 processResult.setCode(ERR_TO_ADDRESS_INVALID.code());
                 processResult.setErrMsg(ERR_TO_ADDRESS_INVALID.msg());
             } else {
-                if (kernel.getBlockchain().getBlockByHash(Bytes32.wrap(hash), false) == null) {
-                    processResult.setCode(ERR_TO_ADDRESS_INVALID.code());
-                    processResult.setErrMsg(ERR_TO_ADDRESS_INVALID.msg());
-                }
+                return hash;
             }
 
         } catch (NumberFormatException e) {
