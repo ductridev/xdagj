@@ -79,11 +79,11 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
     }
 
     @Override
-    public Object storeTransaction(String _paymentID, String _value, String _remark) {
+    public Object storeTransaction(String _paymentID, String admin, String _value, String _remark) {
 
         ProcessResult result = ProcessResult.builder().code(SUCCESS.code()).build();
 
-        Bytes32 hash = checkParam(_paymentID, _paymentID, _value, _remark, result);
+        Bytes32 hash = checkParam(_paymentID, admin, _value, _remark, result);
         if (result.getCode() != SUCCESS.code()) {
             return result.getErrMsg();
         }

@@ -82,8 +82,8 @@ public interface Web3XdagModule {
         return getXdagModule().sendRawTransaction(rawData);
     }
 
-    default Object xdag_storeTransaction(String _paymentID, String _value, String _remark) {
-        return getXdagModule().storeTransaction(_paymentID, _value, _remark);
+    default Object xdag_storeTransaction(String _paymentID, String admin, String _value, String _remark) {
+        return getXdagModule().storeTransaction(_paymentID, admin, _value, _remark);
     }
 
     default String xdag_sendTransaction(Web3.CallArguments args) {

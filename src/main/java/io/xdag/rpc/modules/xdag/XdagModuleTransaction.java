@@ -31,7 +31,7 @@ public interface XdagModuleTransaction {
 
     String sendTransaction(Web3.CallArguments args);
 
-    Object storeTransaction(String _paymentID, String _value, String _remark);
+    Object storeTransaction(String _paymentID, String admin, String _value, String _remark);
 
     String sendRawTransaction(String rawData);
 

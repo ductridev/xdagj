@@ -71,8 +71,8 @@ public class XdagModule implements XdagModuleTransaction, XdagModuleWallet, Xdag
     }
 
     @Override
-    public Object storeTransaction(String _paymentID, String _value, String _remark) {
-        return xdagModuleTransaction.storeTransaction(_paymentID, _value, _remark);
+    public Object storeTransaction(String _paymentID, String admin, String _value, String _remark) {
+        return xdagModuleTransaction.storeTransaction(_paymentID, admin, _value, _remark);
     }
 
     @Override
