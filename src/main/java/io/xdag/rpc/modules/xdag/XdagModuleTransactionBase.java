@@ -199,7 +199,7 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
             if (to.length() == 32) {
                 hash = Bytes32.wrap(address2Hash(to));
             } else {
-                hash = Bytes32.wrap(BasicUtils.getHashStoreTransaction(to));
+                hash = Bytes32.wrap(BasicUtils.getHash(to));
             }
             if (hash == null) {
                 processResult.setCode(ERR_TO_ADDRESS_INVALID.code());
