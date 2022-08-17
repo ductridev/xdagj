@@ -89,19 +89,21 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
 
     @Override
     public Object storeTransaction(String _paymentID, String admin, String _value, String _remark) {
+        Bytes32 hash;
+        double amount = BasicUtils.getDouble(_value);
 
-        ProcessResult result = ProcessResult.builder().code(SUCCESS.code()).build();
+        String remark = _remark != null ? _remark : null;
 
-        Bytes32 hash = checkParam(_paymentID, admin, _value, _remark, result);
-        if (result.getCode() != SUCCESS.code()) {
-            return result.getErrMsg();
+        if (admin.length() == 32) {
+            hash = Bytes32.wrap(address2Hash(admin));
+        } else {
+            hash = Bytes32.wrap(BasicUtils.getHash(admin));
         }
-        if (result.getCode() != SUCCESS.code()) {
-            return result.getErrMsg();
+        if (hash == null) {
+            return "No Address";
         }
 
         // store through xfer
-
         MutableBytes32 key = MutableBytes32.create();
         key.set(8, Objects.requireNonNull(hash).slice(8, 24));
         if (kernel.getBlockchain().getBlockByHash(Bytes32.wrap(key), false) == null) {
@@ -113,14 +115,9 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         if (!wallet.unlock("ductridev")) {
             return "The password is incorrect";
         }
-        double amount = BasicUtils.getDouble(_value);
-        storeWithXfer(amount, hash, _remark);
+        storeWithXfer(amount, hash, remark);
 
-        if (result.getCode() != SUCCESS.code()) {
-            return result.getErrMsg();
-        } else {
-            return result.getResInfo();
-        }
+        return "";
     }
 
     @Override
