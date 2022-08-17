@@ -26,7 +26,7 @@ The configuration file is located in `src/main/resources/xdag-XXX.config`, if yo
     
     request
     ```js
-    curl http://localhost:4444/ -s -X POST -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"xdag_syncing\",\"params\":[],\"id\":1}"
+    curl http://localhost:10001/ -s -X POST -H "Content-Type: application/json" --data "{\"jsonrpc\":\"2.0\",\"method\":\"xdag_storeTransaction\",\"params\":[\"62e8d9f0b91566f3feabc35f00000000\", \"b09e7a499a4ba32cb9765e6e8aee0fe8919f880f\", \"0.04\", \"xdagj\"],\"id\":1}"
     ```
     response
     ```json
