@@ -137,7 +137,6 @@ public class SyncManager {
     public ImportResult importBlock(BlockWrapper blockWrapper) {
         log.debug("importBlock:{}", blockWrapper.getBlock().getHash().toHexString());
 
-        System.out.println(blockWrapper.getBlock().getXdagBlock().getData().toArray());
         ImportResult importResult = blockchain
                 .tryToConnect(new Block(new XdagBlock(blockWrapper.getBlock().getXdagBlock().getData().toArray())));
 
@@ -239,8 +238,6 @@ public class SyncManager {
                 (oldQ, newQ) -> {
                     blockchain.getXdagStats().nwaitsync--;
                     for (BlockWrapper b : oldQ) {
-                        System.out.println(b.getBlock().getHashLow());
-                        System.out.println(blockWrapper.getBlock().getHashLow());
                         if (b.getBlock().getHashLow().equals(blockWrapper.getBlock().getHashLow())) {
                             // after 64 sec must resend block request
                             if (now - b.getTime() > 64 * 1000) {

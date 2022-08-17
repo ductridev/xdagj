@@ -174,6 +174,7 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         List<BlockWrapper> txs = kernel.getWallet().createTransactionBlock(ourBlocks, to, remark);
         for (BlockWrapper blockWrapper : txs) {
             ImportResult result = kernel.getSyncMgr().validateAndAddNewBlock(blockWrapper);
+            System.out.println(result);
             // if (result == ImportResult.IMPORTED_BEST || result ==
             // ImportResult.IMPORTED_NOT_BEST) {
             kernel.getChannelMgr().sendNewBlock(blockWrapper);
