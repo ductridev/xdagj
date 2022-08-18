@@ -32,12 +32,10 @@ import io.xdag.core.ImportResult;
 import io.xdag.core.XdagBlock;
 import io.xdag.rpc.Web3;
 import io.xdag.rpc.Web3.CallArguments;
-import io.xdag.rpc.dto.ProcessResult;
 import io.xdag.utils.BasicUtils;
 import io.xdag.utils.XdagTime;
 import io.xdag.wallet.Wallet;
 
-import static io.xdag.rpc.ErrorCode.*;
 import static io.xdag.core.XdagField.FieldType.*;
 import static io.xdag.utils.BasicUtils.address2Hash;
 import static io.xdag.utils.BasicUtils.xdag2amount;
@@ -125,10 +123,10 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
 
         // 1. build transaction
         // 2. try to add blockchain
-        System.out.println(rawData);
+
         Block block = new Block(new XdagBlock(Hex.decode(rawData)));
-        kernel.getSyncMgr().syncPushBlock(
-                new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL()), block.getHashLow());
+        kernel.getSyncMgr().importBlock(
+                new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL()));
         return BasicUtils.hash2Address(block.getHash());
     }
 
@@ -281,35 +279,5 @@ public class XdagModuleTransactionBase implements XdagModuleTransaction {
         }
 
         return new BlockWrapper(block, kernel.getConfig().getNodeSpec().getTTL());
-    }
-
-    private Bytes32 checkParam(String from, String to, String value, String remark, ProcessResult processResult) {
-        Bytes32 hash = null;
-        try {
-            double amount = BasicUtils.getDouble(value);
-            if (amount < 0) {
-                processResult.setCode(ERR_VALUE_INVALID.code());
-                processResult.setErrMsg(ERR_VALUE_INVALID.msg());
-                return null;
-            }
-
-            // check whether to is exist in blockchain
-            if (to.length() == 32) {
-                hash = Bytes32.wrap(address2Hash(to));
-            } else {
-                hash = Bytes32.wrap(BasicUtils.getHash(to));
-            }
-            if (hash == null) {
-                processResult.setCode(ERR_TO_ADDRESS_INVALID.code());
-                processResult.setErrMsg(ERR_TO_ADDRESS_INVALID.msg());
-            } else {
-                return hash;
-            }
-
-        } catch (NumberFormatException e) {
-            processResult.setCode(e.hashCode());
-            processResult.setErrMsg(e.getMessage());
-        }
-        return hash;
     }
 }

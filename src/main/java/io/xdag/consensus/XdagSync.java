@@ -29,9 +29,10 @@ import static io.xdag.config.Constants.REQUEST_WAIT;
 
 import com.google.common.util.concurrent.SettableFuture;
 import io.xdag.Kernel;
-import io.xdag.db.store.BlockStore;
+import io.xdag.db.BlockStore;
 import io.xdag.net.Channel;
 import io.xdag.net.manager.XdagChannelManager;
+
 import java.nio.ByteOrder;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nonnull;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -69,8 +71,7 @@ public class XdagSync {
     private final ConcurrentHashMap<Long, SettableFuture<Bytes>> sumsRequestMap;
     @Getter
     private final ConcurrentHashMap<Long, SettableFuture<Bytes>> blocksRequestMap;
-    // TODO: paulochen 开始同步的时间点/快照时间点
-    private final long startSyncTime;
+
     private Status status;
     private ScheduledFuture<?> sendFuture;
     private volatile boolean isRunning;
@@ -81,7 +82,6 @@ public class XdagSync {
         sendTask = new ScheduledThreadPoolExecutor(1, factory);
         sumsRequestMap = new ConcurrentHashMap<>();
         blocksRequestMap = new ConcurrentHashMap<>();
-        this.startSyncTime = kernel.getConfig().getSnapshotSpec().getSnapshotTime();
     }
 
     /**
@@ -101,7 +101,7 @@ public class XdagSync {
         log.debug("SyncLoop...");
         try {
             // TODO: paulochen 开始同步的时间点/快照时间点
-            requestBlocks(startSyncTime, 1L << 48);
+            requestBlocks(0, 1L << 48);
         } catch (Throwable e) {
             log.error("error when requestBlocks {}", e.getMessage());
         }
@@ -122,7 +122,6 @@ public class XdagSync {
             Channel xc = any.get(index);
             if (dt <= REQUEST_BLOCKS_MAX_TIME) {
                 randomSeq = xc.getXdag().sendGetBlocks(t, t + dt);
-//                log.debug("sendGetBlocks seq:{}",randomSeq);
                 blocksRequestMap.put(randomSeq, sf);
                 try {
                     sf.get(REQUEST_WAIT, TimeUnit.SECONDS);
@@ -133,19 +132,15 @@ public class XdagSync {
                 }
                 blocksRequestMap.remove(randomSeq);
             } else {
-//                byte[] lSums = new byte[256];
                 MutableBytes lSums = MutableBytes.create(256);
                 Bytes rSums;
                 if (blockStore.loadSum(t, t + dt, lSums) <= 0) {
                     return;
                 }
-//                log.debug("lSum is " + Hex.toHexString(lSums));
                 randomSeq = xc.getXdag().sendGetSums(t, t + dt);
                 sumsRequestMap.put(randomSeq, sf);
-//                log.debug("sendGetSums seq:{}.", randomSeq);
                 try {
                     Bytes sums = sf.get(REQUEST_WAIT, TimeUnit.SECONDS);
-//                    rSums = Arrays.copyOf(sums, 256);
                     rSums = sums.copy();
                 } catch (InterruptedException | ExecutionException | TimeoutException e) {
                     sumsRequestMap.remove(randomSeq);
@@ -153,16 +148,11 @@ public class XdagSync {
                     return;
                 }
                 sumsRequestMap.remove(randomSeq);
-//                log.debug("rSum is " + Hex.toHexString(rSums));
                 dt >>= 4;
                 for (int i = 0; i < 16; i++) {
-//                    long lSumsSum = BytesUtils.bytesToLong(lSums, i * 16, true);
                     long lSumsSum = lSums.getLong(i * 16, ByteOrder.LITTLE_ENDIAN);
-//                    long lSumsSize = BytesUtils.bytesToLong(lSums, i * 16 + 8, true);
                     long lSumsSize = lSums.getLong(i * 16 + 8, ByteOrder.LITTLE_ENDIAN);
-//                    long rSumsSum = BytesUtils.bytesToLong(rSums, i * 16, true);
                     long rSumsSum = rSums.getLong(i * 16, ByteOrder.LITTLE_ENDIAN);
-//                    long rSumsSize = BytesUtils.bytesToLong(rSums, i * 16 + 8, true);
                     long rSumsSize = rSums.getLong(i * 16 + 8, ByteOrder.LITTLE_ENDIAN);
 
                     if (lSumsSize != rSumsSize || lSumsSum != rSumsSum) {

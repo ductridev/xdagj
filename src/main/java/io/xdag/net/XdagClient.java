@@ -34,14 +34,14 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.xdag.config.Config;
 import io.xdag.net.handler.XdagChannelInitializer;
 import io.xdag.net.node.Node;
+import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Nonnull;
 import java.net.InetSocketAddress;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.annotation.Nonnull;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class XdagClient {
@@ -92,6 +92,8 @@ public class XdagClient {
         Bootstrap b = new Bootstrap();
         b.group(workerGroup);
         b.channel(NioSocketChannel.class);
+        b.option(ChannelOption.TCP_NODELAY, true);
+        b.option(ChannelOption.SO_KEEPALIVE, true);
         b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
         b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getPoolSpec().getConnectionTimeout());
         b.remoteAddress(host, port);

@@ -143,7 +143,7 @@ public class BasicUtils {
         long temp = xdag - (first << 32);
         double tem = temp / Math.pow(2, 32);
         BigDecimal bigDecimal = new BigDecimal(first + tem);
-        return bigDecimal.setScale(2, RoundingMode.HALF_UP).doubleValue();
+        return bigDecimal.setScale(12, RoundingMode.HALF_UP).doubleValue();
     }
 
     public static boolean crc32Verify(byte[] src, int crc) {
@@ -214,9 +214,6 @@ public class BasicUtils {
 
     public static double xdagHashRate(BigInteger[] diffs) {
         double sum = 0;
-        // for (BigInteger diff : diffs) {
-        // sum += xdag_diff2log(diff);
-        // }
         int length = Math.min(diffs.length, HASH_RATE_LAST_MAX_TIME);
         for (int i = 0; i < length; i++) {
             sum += xdag_diff2log(diffs[i]);

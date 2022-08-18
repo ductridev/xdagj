@@ -21,28 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package io.xdag.rpc.dto;
 
-package io.xdag.randomx;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import lombok.Getter;
-import lombok.Setter;
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ConfigDTO {
 
-@Getter
-@Setter
-public class RandomXMemory {
+    String poolIp;
+    int poolPort;
+    String nodeIp;
+    int nodePort;
+    int globalMinerLimit;
+    int maxConnectMinerPerIp;
+    int maxMinerPerAccount;
 
-    protected byte[] seed;
-    protected long seedHeight;
-    protected long seedTime;
-    protected long switchTime;
-    protected int isSwitched;
-    protected long rxCache;
-    protected long rxDataset;
-    protected long poolVm;
-    protected long blockVm;
+    String poolFeeRation;
+    String poolRewardRation;
+    String poolDirectRation;
+    String poolFundRation;
 
-    public RandomXMemory() {
-        this.switchTime = -1;
-        this.isSwitched = -1;
-    }
 }

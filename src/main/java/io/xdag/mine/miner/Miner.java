@@ -133,17 +133,6 @@ public class Miner {
         return connChannelCounts.get();
     }
 
-    public void addChannelCounts(int num) {
-        connChannelCounts.addAndGet(num);
-    }
-
-    /**
-     * 自减1
-     */
-    public void subChannelCounts() {
-        connChannelCounts.getAndDecrement();
-    }
-
     public MinerStates getMinerStates() {
         return this.minerStates;
     }
@@ -159,7 +148,7 @@ public class Miner {
      * maxdiff 全部为0
      */
     public boolean canRemove() {
-        if (minerStates == MinerStates.MINER_ARCHIVE && connChannelCounts.get() == 0) {
+        if (minerStates == MinerStates.MINER_ARCHIVE && channels.size() == 0) {
             for (Double maxDiff : maxDiffs) {
                 if (maxDiff.compareTo((double) 0) > 0) {
                     return false;
@@ -273,26 +262,17 @@ public class Miner {
         return boundedTaskCounter;
     }
 
-    public void setBoundedTaskCounter(int boundedTaskCounter) {
-        this.boundedTaskCounter = boundedTaskCounter;
-    }
-
     public void addBoundedTaskCounter() {
         this.boundedTaskCounter++;
     }
 
     public void putChannel(InetSocketAddress inetSocketAddress, MinerChannel channel) {
         this.channels.put(inetSocketAddress, channel);
-    }
-
-    /**
-     * Todo:后续改为atomic
-     */
-    public void increaseTaskIndex() {
-        taskIndex++;
+        connChannelCounts.incrementAndGet();
     }
 
     public void removeChannel(InetSocketAddress address) {
         this.channels.remove(address);
+        connChannelCounts.getAndDecrement();
     }
 }

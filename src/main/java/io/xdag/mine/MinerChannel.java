@@ -28,11 +28,12 @@ import static io.xdag.mine.miner.MinerStates.MINER_ACTIVE;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.xdag.Kernel;
 import io.xdag.config.Config;
 import io.xdag.core.Block;
 import io.xdag.core.XdagField;
-import io.xdag.db.store.BlockStore;
+import io.xdag.db.BlockStore;
 import io.xdag.mine.handler.ConnectionLimitHandler;
 import io.xdag.mine.handler.Miner03;
 import io.xdag.mine.handler.MinerHandShakeHandler;
@@ -45,6 +46,7 @@ import io.xdag.net.XdagVersion;
 import io.xdag.net.message.MessageFactory;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -52,6 +54,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes32;
@@ -169,7 +172,6 @@ public class MinerChannel {
     private MinerHandShakeHandler minerHandShakeHandler;
     private MinerMessageHandler minerMessageHandler;
     private Miner03 miner03;
-    private ConnectionLimitHandler connectionLimitHandler;
 
     @Getter
     private boolean isMill = false;
@@ -179,7 +181,7 @@ public class MinerChannel {
      */
     @Getter
     @Setter
-    private String workerName = "";
+    private String workerName = StringUtils.EMPTY;
 
     /**
      * 初始化 同时需要判断是服务器端还是客户端
@@ -219,16 +221,12 @@ public class MinerChannel {
 
         // 仅服务器端需要这个握手协议 接受
         this.minerHandShakeHandler = new MinerHandShakeHandler(this, kernel);
+        pipeline.addLast("LengthFieldBasedFrameDecoder",new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN,1024*1024,0,4,0,4,true));
         pipeline.addLast("MinerHandShake", minerHandShakeHandler);
     }
 
-    // 初始化这个channel
-
     /**
      * 根据版本创建一个信息工厂
-     *
-     * @param version 对应的版本
-     * @return 工厂
      */
     private MessageFactory createMinerMessageFactory(XdagVersion version) {
         return switch (version) {
@@ -237,13 +235,10 @@ public class MinerChannel {
     }
 
     /**
-     * 激活这个channel的各种handler 为管道添加各种处理器
-     *
-     * @param ctx 上下文
-     * @param version 版本号
+     * Active Channel and Add Handler 为管道添加各种处理器
      */
-    public void activateHadnler(ChannelHandlerContext ctx, XdagVersion version) {
-        log.debug("activate handler");
+    public void activateHandler(ChannelHandlerContext ctx, XdagVersion version) {
+        log.debug("Activate Handler");
         MessageFactory messageFactory = createMinerMessageFactory(version);
         minerMessageHandler.setMessageFactory(messageFactory);
         ctx.pipeline().addLast("MinerMessageHandler", minerMessageHandler);
@@ -252,26 +247,24 @@ public class MinerChannel {
 
     public boolean initMiner(Bytes32 accountAddressHash) {
         this.accountAddressHash = accountAddressHash;
-        log.debug("init a Miner:" + accountAddressHash.toHexString());
+        String addrHexStr = accountAddressHash.toHexString();
+        log.debug("Init A Miner:" + addrHexStr);
         // 判断这个矿工是否已经存在了
-        if (minerManager.getActivateMiners().containsKey(accountAddressHash)) {
-            // 存在 但是会不会超过限制数
-            log.debug("已经存在一个对应的矿工了");
+        if (minerManager !=null && minerManager.getActivateMiners().containsKey(accountAddressHash)) {
+            log.debug("Miner:{} already exists", addrHexStr);
             this.miner = minerManager.getActivateMiners().get(accountAddressHash);
-            if (miner.getConnChannelCounts() < config.getPoolSpec().getMaxMinerPerAccount()) {
+            if (miner !=null && miner.getConnChannelCounts() < config.getPoolSpec().getMaxMinerPerAccount()) {
                 this.miner = minerManager.getActivateMiners().get(accountAddressHash);
-                this.miner.addChannelCounts(1);
                 this.miner.putChannel(this.inetAddress, this);
                 this.miner.setMinerStates(MINER_ACTIVE);
                 return true;
             } else {
-                log.debug("同一个矿工连接了太多");
+                log.debug("Too many connections to the same miner:{}", addrHexStr);
                 return false;
             }
         } else {
             this.miner = new Miner(accountAddressHash);
             minerManager.getActivateMiners().put(accountAddressHash, miner);
-            miner.addChannelCounts(1);
             this.miner.putChannel(this.inetAddress, this);
             this.miner.setMinerStates(MINER_ACTIVE);
             return true;
@@ -325,11 +318,13 @@ public class MinerChannel {
         hashlow.set(8, accountAddressHash.slice(8, 24));
 //        System.arraycopy(accountAddressHash,8,hashlow,8,24);
         Block block = blockStore.getBlockByHash(hashlow, false);
+
+        long amount = 0;
         if (block == null) {
             log.debug("Can't found block,{}", hashlow.toHexString());
-            return;
+        } else {
+            amount = block.getInfo().getAmount();
         }
-        long amount = block.getInfo().getAmount();
 //        byte[] data = BytesUtils.merge(BytesUtils.longToBytes(amount, false), BytesUtils.subArray(accountAddressHash.toArray(), 8, 24));
         MutableBytes32 data = MutableBytes32.create();
 //        Bytes data = Bytes.wrap(Bytes.ofUnsignedLong(amount), accountAddressHash.slice(8, 24));
@@ -380,7 +375,6 @@ public class MinerChannel {
         this.miner = miner;
         this.accountAddressHash = miner.getAddressHash();
         miner.putChannel(this.getInetAddress(), this);
-        miner.addChannelCounts(1);
         miner.setMinerStates(MinerStates.MINER_ACTIVE);
         isMill = true;
     }

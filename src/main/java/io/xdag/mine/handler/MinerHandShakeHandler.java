@@ -49,6 +49,8 @@ import io.xdag.utils.XdagTime;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tuweni.bytes.Bytes32;
 
@@ -77,7 +79,7 @@ public class MinerHandShakeHandler extends ByteToMessageDecoder {
 
             long sectorNo = channel.getInBound().get();
 
-            /* 解密数据 */
+            /* decrypt data */
             byte[] uncryptData = Native.dfslib_uncrypt_array(address, 16, sectorNo);
 //            int crc = BytesUtils.bytesToInt(uncryptData, 4, true);
 //            int head = BytesUtils.bytesToInt(uncryptData, 0, true);
@@ -92,43 +94,49 @@ public class MinerHandShakeHandler extends ByteToMessageDecoder {
                 log.debug(" not a block from miner");
                 ctx.channel().closeFuture();
             } else {
-                // 把区块头置0了
                 System.arraycopy(BytesUtils.longToBytes(0, true), 0, uncryptData, 0, 8);
                 Block addressBlock = new Block(new XdagBlock(uncryptData));
-                // Todo:加入block_queue
-                ImportResult importResult = tryToConnect(addressBlock);
 
-                if (importResult == ImportResult.ERROR) {
-                    log.debug("ErrorInfo:{}", importResult.getErrorInfo());
-                    ctx.close();
-                    return;
-                }
+                // TODO:
+                checkProtocol(ctx,addressBlock);
+
+//                ImportResult importResult = tryToConnect(addressBlock);
+//
+//                if (importResult == ImportResult.ERROR) {
+//                    log.debug("ErrorInfo:{}", importResult.getErrorInfo());
+//                    ctx.close();
+//                    return;
+//                }
+//                //If it is a new address block
+//                if (importResult != ImportResult.EXIST) {
+//                    log.info("XDAG:new wallet connect. New Address {} with channel {} connect.",
+//                            BasicUtils.hash2Address(addressBlock.getHash()), channel.getInetAddress().toString());
+//                } else {
+//                    log.info("XDAG:old wallet connect. Address {} with channel {} connect.",
+//                            BasicUtils.hash2Address(addressBlock.getHash()), channel.getInetAddress().toString());
+//                }
 
                 if (!initMiner(addressBlock.getHash())) {
                     log.debug("too many connect for a miner");
                     ctx.close();
                     return;
                 }
-
-                // 如果是新增的地址块
-                if (importResult != ImportResult.EXIST) {
-                    log.info("XDAG:new wallet connect. New wallet-address {} with channel {} connect, connect-Time {}",
-                            addressBlock.getHash().toHexString(), channel.getInetAddress().toString(),
-                            XdagTime.format(new Date()));
-                } else {
-                    log.info("XDAG:old wallet connect. Wallet-address {} with channel {} connect, connect-Time {}",
-                            addressBlock.getHash().toHexString(), channel.getInetAddress().toString(),
-                            XdagTime.format(new Date()));
+                AtomicInteger channelsAccount = kernel.getChannelsAccount();
+                if (channelsAccount.get() >= kernel.getConfig().getPoolSpec().getGlobalMinerChannelLimit()) {
+                    ctx.close();
+                    log.warn("Too many channels in this pool");
+                    return;
                 }
 
+                kernel.getChannelsAccount().getAndIncrement();
                 channel.getInBound().add(16L);
                 minerManager.addActivateChannel(channel);
                 channel.setIsActivate(true);
                 channel.setConnectTime(new Date(System.currentTimeMillis()));
                 channel.setAccountAddressHash(addressBlock.getHash());
-                channel.activateHadnler(ctx, V03);
+                channel.activateHandler(ctx, V03);
                 ctx.pipeline().remove(this);
-                // TODO: 2020/5/8 这里可能还有一点小bug 如果无限加入 岂不是会无线创建了
+                // TODO: 2020/5/8 There may be a bug here. If you join infinitely, won't it be created wirelessly?
                 log.debug("add a new miner,miner address [" + BasicUtils.hash2Address(addressBlock.getHash()) + "]");
             }
         } else {
@@ -136,10 +144,35 @@ public class MinerHandShakeHandler extends ByteToMessageDecoder {
         }
     }
 
+    public void checkProtocol(ChannelHandlerContext ctx,Block addressBlock) {
+        if (addressBlock.getXdagBlock().getField(addressBlock.getOutsigIndex()).getData().isZero()) {
+            // pseudo block
+            log.debug("pseudo block, addressblock {}",addressBlock.getHashLow());
+
+        } else {
+            ImportResult importResult = tryToConnect(addressBlock);
+
+            if (importResult == ImportResult.ERROR) {
+                log.debug("ErrorInfo:{}", importResult.getErrorInfo());
+                ctx.close();
+                return;
+            }
+            //If it is a new address block
+            if (importResult != ImportResult.EXIST) {
+                log.info("XDAG:new wallet connect. New Address {} with channel {} connect.",
+                        BasicUtils.hash2Address(addressBlock.getHash()), channel.getInetAddress().toString());
+            } else {
+                log.info("XDAG:old wallet connect. Address {} with channel {} connect.",
+                        BasicUtils.hash2Address(addressBlock.getHash()), channel.getInetAddress().toString());
+            }
+        }
+
+    }
+
     public boolean isDataIllegal(byte[] uncryptData) {
         int crc = BytesUtils.bytesToInt(uncryptData, 4, true);
         int head = BytesUtils.bytesToInt(uncryptData, 0, true);
-        // 清除transportheader
+        // clean transport header
         System.arraycopy(BytesUtils.longToBytes(0, true), 0, uncryptData, 4, 4);
         return (head != BLOCK_HEAD_WORD || !crc32Verify(uncryptData, crc));
 
@@ -157,7 +190,7 @@ public class MinerHandShakeHandler extends ByteToMessageDecoder {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         if (cause instanceof IOException) {
-            log.debug("远程主机关闭了一个连接");
+            log.debug("The remote host closed a connection.");
             ctx.channel().closeFuture();
         } else {
             cause.printStackTrace();
@@ -165,15 +198,11 @@ public class MinerHandShakeHandler extends ByteToMessageDecoder {
         channel.onDisconnect();
     }
 
-    /**
-     * 远程主机强制关闭连接
-     */
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
         try {
             Channel nettyChannel = ctx.channel();
-            if (evt instanceof IdleStateEvent) {
-                IdleStateEvent e = (IdleStateEvent) evt;
+            if (evt instanceof IdleStateEvent e) {
                 if (e.state() == IdleState.READER_IDLE) {
                     nettyChannel.closeFuture();
                     if (log.isDebugEnabled()) {
@@ -189,7 +218,7 @@ public class MinerHandShakeHandler extends ByteToMessageDecoder {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
         }
     }
 }

@@ -111,7 +111,7 @@ public class XdagChannelManager {
                 break;
             } catch (Throwable e) {
                 if (wrapper != null) {
-                    log.error("Block dump: {}", wrapper.getBlock());
+                    log.error("Block dump: {}", wrapper.getBlock(),e);
                 } else {
                     log.error("Error broadcasting unknown block", e);
                 }
@@ -132,10 +132,10 @@ public class XdagChannelManager {
         }
         for (Channel channel : activeChannels.values()) {
             if (receive != null && channel.getNode().getHexId().equals(receive.getHexId())) {
-                log.debug("不发送给他");
+                log.debug("not send to sender node");
                 continue;
             }
-            log.debug("发送给除receive的节点");
+            log.debug("send to other node exclude sender node");
             channel.sendNewBlock(blockWrapper);
         }
     }

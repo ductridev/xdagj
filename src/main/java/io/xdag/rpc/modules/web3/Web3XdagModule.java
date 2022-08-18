@@ -26,6 +26,7 @@ package io.xdag.rpc.modules.web3;
 
 import io.xdag.rpc.Web3;
 import io.xdag.rpc.dto.BlockResultDTO;
+import io.xdag.rpc.dto.ConfigDTO;
 import io.xdag.rpc.dto.ProcessResult;
 import io.xdag.rpc.dto.StatusDTO;
 import io.xdag.rpc.modules.xdag.XdagModule;
@@ -105,4 +106,10 @@ public interface Web3XdagModule {
     Object xdag_poolConfig() throws Exception;
 
     Object xdag_netConnectionList() throws Exception;
+
+    Object xdag_updatePoolConfig(ConfigDTO args, String passphrase) throws Exception;
+
+    Object xdag_getPoolWorkers() throws Exception;
+
+    String xdag_getMaxXferBalance() throws Exception;
 }
